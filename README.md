@@ -29,10 +29,10 @@ The workflow is intentionally simple:
 3. The app reads the head office rate sheet directly from disk.
 4. The app calculates the spot rate for the selected source currency versus TND.
 5. If the amount is strictly less than 10000, the spot rate is applied automatically and no negotiation is allowed.
-6. If the amount is 10000 or more, the agency can accept the spot rate or request an improvement from head office.
-7. Head office reviews pending negotiations and approves or refuses them.
+6. If the amount is 10000 or more, the agency can accept the spot rate or request an improvement from head office, optionally including a desired counteroffer rate.
+7. Head office reviews pending negotiations, sees any agency requested rate, and can approve with a final rate, refuse, or return a new proposal to the agency.
 8. If head office approves, the approved final rate from siege is applied.
-9. If head office refuses, the agency can accept the spot rate or cancel the operation.
+9. If head office refuses, the agency can accept the spot rate or cancel the operation. If head office proposes another rate, the agency can accept it, send a counteroffer, or cancel.
 
 ## Technology Stack
 
@@ -61,7 +61,7 @@ routes/agency.js           Agency dashboard and operation submission flow
 routes/headoffice.js       Head office negotiation queue and decisions
 views/                     EJS pages and shared partials
 public/css/style.css       Application styling
-data/contrib-Louay-Test.xlsx  Default head-office rate sheet
+data/taux.xlsx             Default head-office rate sheet
 data/make_sample_rates.js  Helper to regenerate the sample rate workbook
 ```
 
@@ -122,6 +122,8 @@ The expected workbook columns are:
 - `Achat`
 - `Vente`
 - `DateMaj`
+
+The default internal workbook path is `data/taux.xlsx`, and the file is read fresh from disk on every rate lookup.
 
 The rate convention is:
 
@@ -190,10 +192,13 @@ Typical status values are:
 - `spot_only`
 - `spot_pending_choice`
 - `pending_negotiation`
+- `negotiation_approved_pending_agency`
 - `negotiation_approved`
 - `negotiation_refused_pending_agency`
 - `negotiation_refused_accepted`
 - `negotiation_cancelled_by_agency`
+
+The `operations` table also stores `requested_taux` when the agency submits a desired counteroffer during negotiation.
 
 ## User Flows
 
@@ -215,8 +220,9 @@ The head-office dashboard shows all pending negotiations. Head office can:
 
 - review the queue of operations waiting for a decision
 - inspect all operations in the system
+- see the agency's requested counteroffer before deciding
 - approve a negotiation with a final rate
-- refuse a negotiation and send it back to the agency for final acceptance or cancellation
+- refuse a negotiation, return a new proposal, or send it back to the agency for final acceptance or cancellation
 
 ### Office flow
 
