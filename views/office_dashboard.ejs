@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Office - Operations' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Operations de periode</h1>
+        <p class="page-sub">Consultez toutes les operations et exportez un fichier Excel pour la periode choisie.</p>
+      </div>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <form method="GET" action="/office" class="card-form" style="margin-bottom: 1.5rem;">
+      <div class="form-row">
+        <label>
+          Date debut
+          <input type="date" name="start_date" value="<%= startDate %>" required />
+        </label>
+        <label>
+          Date fin
+          <input type="date" name="end_date" value="<%= endDate %>" required />
+        </label>
+      </div>
+      <div class="action-row">
+        <button class="btn-primary" type="submit">Filtrer</button>
+        <a class="btn-secondary" href="/office/export?start_date=<%= startDate %>&end_date=<%= endDate %>">Telecharger Excel</a>
+      </div>
+    </form>
+
+    <div class="table-wrap">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Agence</th>
+            <th>Client</th>
+            <th>Paire</th>
+            <th>Montant</th>
+            <th>Taux spot</th>
+            <th>Taux final</th>
+            <th>Montant final</th>
+            <th>Etat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (operations.length === 0) { %>
+          <tr><td colspan="9" class="empty-row">Aucune operation sur cette periode.</td></tr>
+          <% } %>
+          <% operations.forEach(function(op) { %>
+          <% const montantFinal = op.taux_final != null ? (op.montant * op.taux_final) : null; %>
+          <tr>
+            <td class="mono">#<%= op.id %></td>
+            <td><%= op.agence_name %></td>
+            <td><%= op.nom_client %></td>
+            <td class="mono"><%= op.currency_from || op.devise %> -> TND</td>
+            <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
+            <td class="mono"><%= op.taux_spot.toFixed(4) %></td>
+            <td class="mono"><%= op.taux_final != null ? op.taux_final.toFixed(4) : '—' %></td>
+            <td class="mono rate-highlight"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' TND' : '—' %></td>
+            <td><%= op.status %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

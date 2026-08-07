@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Connexion - Guichet Devises' }) %></head>
+<body class="login-body">
+  <div class="login-card">
+    <div class="login-brand">
+      <span class="brand-mark">FX</span>
+      <div class="brand-text">
+        <span class="brand-name">Guichet Devises</span>
+        <span class="brand-sub">Acces agences &amp; siege</span>
+      </div>
+    </div>
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+    <form method="POST" action="/login" class="stacked-form">
+      <label>
+        Identifiant
+        <input type="text" name="username" autocomplete="username" required autofocus />
+      </label>
+      <label>
+        Mot de passe
+        <input type="password" name="password" autocomplete="current-password" required />
+      </label>
+      <button class="btn-primary" type="submit">Se connecter</button>
+    </form>
+    <div class="login-hint">
+      <p>Comptes de demonstration :</p>
+      <ul>
+        <li><code>frontoffice</code> / <code>office123</code> &mdash; front office / siege</li>
+        <li><code>backoffice</code> / <code>office123</code> &mdash; back office</li>
+        <li><code>middleoffice</code> / <code>office123</code> &mdash; middle office</li>
+        <li><code>siege</code> / <code>siege123</code> &mdash; direction des marches</li>
+        <li><code>agence000</code> / <code>agence123</code> &mdash; guichet agence 000</li>
+        <li><code>admin</code> / <code>admin123</code> &mdash; administration</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

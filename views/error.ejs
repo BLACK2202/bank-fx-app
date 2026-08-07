@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Erreur' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page page-narrow">
+    <div class="alert alert-error"><%= message %></div>
+    <a class="btn-ghost" href="/">Retour a l'accueil</a>
+  </main>
+</body>
+</html>

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Toutes les operations' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Toutes les operations</h1>
+        <p class="page-sub">Vue consolidee, toutes agences confondues.</p>
+      </div>
+      <a class="btn-ghost" href="/siege">Retour a la file</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Agence</th>
+            <th>Client</th>
+            <th>Sens</th>
+            <th>Paire</th>
+            <th>Montant</th>
+            <th>Taux final</th>
+            <th>Montant final</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% all.forEach(function(op) { %>
+          <% const montantFinal = op.taux_final != null ? (op.montant * op.taux_final) : null; %>
+          <tr>
+            <td class="mono">#<%= op.id %></td>
+            <td><%= op.agence_name %></td>
+            <td><%= op.nom_client %></td>
+            <td><span class="tag tag-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
+            <td class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></td>
+            <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
+            <td class="mono"><%= op.taux_final != null ? op.taux_final.toFixed(4) : '—' %></td>
+            <td class="mono rate-highlight"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
+            <td><%= op.status %></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

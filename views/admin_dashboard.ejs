@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Administration - Guichet Devises' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page">
+    <div class="page-header">
+      <div>
+        <h1>Administration des comptes</h1>
+        <p class="page-sub">Creer ou desactiver des agences et des comptes employees.</p>
+      </div>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="form-row">
+      <form method="POST" action="/admin/agencies" class="card-form" style="flex: 1;">
+        <h2>Nouvelle agence</h2>
+        <label>
+          Code agence
+          <input type="text" name="id" value="<%= form.id || '' %>" placeholder="Ex : 101" required />
+        </label>
+        <label>
+          Nom agence
+          <input type="text" name="name" value="<%= form.name || '' %>" required />
+        </label>
+        <button class="btn-primary" type="submit">Creer l'agence</button>
+      </form>
+
+      <form method="POST" action="/admin/users" class="card-form" style="flex: 1;">
+        <h2>Nouveau compte</h2>
+        <label>
+          Identifiant
+          <input type="text" name="username" value="<%= form.username || '' %>" required />
+        </label>
+        <label>
+          Nom complet
+          <input type="text" name="full_name" value="<%= form.full_name || '' %>" required />
+        </label>
+        <label>
+          Mot de passe
+          <input type="password" name="password" required />
+        </label>
+        <label>
+          Role
+          <select name="role" required>
+            <option value="">Choisir...</option>
+            <option value="head_office" <%= form.role === 'head_office' ? 'selected' : '' %>>Siege</option>
+            <option value="middle_office" <%= form.role === 'middle_office' ? 'selected' : '' %>>Middle Office</option>
+            <option value="back_office" <%= form.role === 'back_office' ? 'selected' : '' %>>Back Office</option>
+            <option value="agency" <%= form.role === 'agency' ? 'selected' : '' %>>Agence / employe</option>
+            <option value="admin" <%= form.role === 'admin' ? 'selected' : '' %>>Admin</option>
+          </select>
+        </label>
+        <label>
+          Agence
+          <select name="agency_id">
+            <option value="">Aucune</option>
+            <% agencies.forEach(function(agency) { %>
+              <option value="<%= agency.id %>" <%= form.agency_id === agency.id ? 'selected' : '' %>><%= agency.id %> — <%= agency.name %></option>
+            <% }); %>
+          </select>
+        </label>
+        <button class="btn-primary" type="submit">Creer le compte</button>
+      </form>
+    </div>
+
+    <div class="table-wrap" style="margin-top: 1.5rem;">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Agence</th>
+            <th>Nom</th>
+            <th>Comptes</th>
+            <th>Etat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% agencies.forEach(function(agency) { %>
+          <tr>
+            <td class="mono"><%= agency.id %></td>
+            <td><%= agency.name %></td>
+            <td class="mono"><%= agency.user_count %></td>
+            <td><%= agency.is_active ? 'Active' : 'Desactivee' %></td>
+            <td>
+              <form method="POST" action="/admin/agencies/<%= agency.id %>/toggle">
+                <button class="btn-link" type="submit"><%= agency.is_active ? 'Desactiver' : 'Reactiver' %></button>
+              </form>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-wrap" style="margin-top: 1.5rem;">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Utilisateur</th>
+            <th>Nom</th>
+            <th>Role</th>
+            <th>Agence</th>
+            <th>Etat</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% users.forEach(function(user) { %>
+          <tr>
+            <td class="mono"><%= user.username %></td>
+            <td><%= user.full_name %></td>
+            <td><%= user.role %></td>
+            <td><%= user.agency_name || '—' %></td>
+            <td><%= user.is_active ? 'Actif' : 'Desactive' %></td>
+            <td>
+              <form method="POST" action="/admin/users/<%= user.id %>/toggle">
+                <button class="btn-link" type="submit"><%= user.is_active ? 'Desactiver' : 'Reactiver' %></button>
+              </form>
+            </td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

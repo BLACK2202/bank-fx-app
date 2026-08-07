@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Operation #' + op.id }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page page-narrow">
+    <div class="page-header">
+      <div>
+        <h1>Operation #<%= op.id %></h1>
+        <p class="page-sub"><%= op.nature_sujet %></p>
+      </div>
+      <a class="btn-ghost" href="/agence">Retour</a>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <div class="detail-grid">
+      <div class="detail-item"><span>Client</span><strong><%= op.nom_client %></strong></div>
+      <div class="detail-item"><span>Compte</span><strong class="mono"><%= op.numero_compte %></strong></div>
+      <div class="detail-item"><span>Sens</span><strong><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></strong></div>
+      <div class="detail-item"><span>Paire de devises</span><strong class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></strong></div>
+      <div class="detail-item"><span>Montant</span><strong class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></strong></div>
+      <div class="detail-item"><span>Date valeur</span><strong class="mono"><%= op.date_valeur %></strong></div>
+    </div>
+
+    <div class="rate-panel">
+      <div class="rate-block">
+        <span class="rate-label">Taux spot (siege)</span>
+        <span class="rate-value"><%= op.taux_spot.toFixed(4) %></span>
+        <span class="rate-note">MAJ fichier : <%= op.taux_source_date || '—' %></span>
+      </div>
+      <% if (op.taux_final != null) { %>
+      <div class="rate-block rate-block-final">
+        <span class="rate-label">Taux applique</span>
+        <span class="rate-value"><%= op.taux_final.toFixed(4) %></span>
+      </div>
+      <% } %>
+    </div>
+
+    <% if (op.taux_final != null && op.status !== 'negotiation_approved_pending_agency') { %>
+      <div class="detail-item detail-item-wide">
+        <span>Montant final</span>
+        <strong class="mono"><%= (op.montant * op.taux_final).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) %> <%= op.currency_to || op.devise %></strong>
+      </div>
+    <% } %>
+
+    <% if (op.status === 'spot_pending_choice') { %>
+      <div class="card-form">
+        <h2>Le client accepte-t-il le taux spot ?</h2>
+        <p class="hint">Montant &ge; <%= threshold.toLocaleString('fr-FR') %> : une negociation peut etre demandee au siege.</p>
+        <div class="action-row">
+          <form method="POST" action="/agence/operation/<%= op.id %>/accepter-spot">
+            <button class="btn-primary" type="submit">Accepter le taux spot</button>
+          </form>
+        </div>
+        <form method="POST" action="/agence/operation/<%= op.id %>/negocier" class="stacked-form">
+          <label>
+            Taux souhaite / contre-proposition
+            <input type="number" step="0.0001" min="0.0001" name="requested_taux" value="<%= typeof form !== 'undefined' && form.requested_taux ? form.requested_taux : '' %>" placeholder="Optionnel" />
+          </label>
+          <p class="hint">Vous pouvez proposer un taux cible au siege ou simplement demander une amelioration.</p>
+          <button class="btn-secondary" type="submit">Demander une amelioration au siege</button>
+        </form>
+      </div>
+    <% } else if (op.status === 'pending_negotiation') { %>
+      <div class="alert alert-info">
+        Demande d'amelioration transmise au siege, en attente de decision.
+      </div>
+    <% } else if (op.status === 'negotiation_approved') { %>
+      <div class="alert alert-success">
+        Le siege a valide un taux de <strong><%= op.taux_final.toFixed(4) %></strong>.
+        <% if (op.decision_comment) { %><br/>Commentaire : <%= op.decision_comment %><% } %>
+      </div>
+    <% } else if (op.status === 'negotiation_approved_pending_agency') { %>
+      <div class="card-form">
+        <div class="alert alert-warning">
+          Le siege a propose un taux final de <strong><%= op.taux_final.toFixed(4) %></strong>.
+          <% if (op.decision_comment) { %><br/>Commentaire siege : <%= op.decision_comment %><% } %>
+        </div>
+        <p class="hint">Le client peut accepter cette proposition, renvoyer une contre-offre, ou annuler l'operation.</p>
+        <div class="action-row">
+          <form method="POST" action="/agence/operation/<%= op.id %>/accepter-taux">
+            <button class="btn-primary" type="submit">Accepter le taux propose</button>
+          </form>
+          <form method="POST" action="/agence/operation/<%= op.id %>/refuser-taux">
+            <button class="btn-secondary" type="submit">Refuser la proposition</button>
+          </form>
+        </div>
+        <form method="POST" action="/agence/operation/<%= op.id %>/negocier" class="stacked-form">
+          <label>
+            Contre-offre au siege
+            <input type="number" step="0.0001" min="0.0001" name="requested_taux" value="<%= typeof form !== 'undefined' && form.requested_taux ? form.requested_taux : '' %>" placeholder="Taux de contre-offre" required />
+          </label>
+          <button class="btn-secondary" type="submit">Envoyer une contre-offre</button>
+        </form>
+        <form method="POST" action="/agence/operation/<%= op.id %>/annuler" class="stacked-form">
+          <button class="btn-ghost" type="submit">Annuler l'operation</button>
+        </form>
+      </div>
+    <% } else if (op.status === 'negotiation_refused_pending_agency') { %>
+      <div class="card-form">
+        <div class="alert alert-error">
+          Le siege a refuse l'amelioration demandee.
+          <% if (op.decision_comment) { %><br/>Motif : <%= op.decision_comment %><% } %>
+        </div>
+        <p class="hint">Veuillez confirmer le taux spot <strong><%= op.taux_spot.toFixed(4) %></strong> ou annuler l'operation. Le montant correspondant serait <strong><%= (op.montant * op.taux_spot).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) %> <%= op.currency_to || op.devise %></strong>.</p>
+        <div class="action-row">
+          <form method="POST" action="/agence/operation/<%= op.id %>/accepter-spot">
+            <button class="btn-primary" type="submit">Accepter le taux spot</button>
+          </form>
+          <form method="POST" action="/agence/operation/<%= op.id %>/annuler">
+            <button class="btn-secondary" type="submit">Annuler l'operation</button>
+          </form>
+        </div>
+      </div>
+    <% } else if (op.status === 'negotiation_refused_accepted') { %>
+      <div class="alert alert-success">
+        Le siege a refuse l'amelioration. L'agence a confirme le taux spot <strong><%= op.taux_final.toFixed(4) %></strong>.
+        <% if (op.decision_comment) { %><br/>Motif du siege : <%= op.decision_comment %><% } %>
+      </div>
+    <% } else if (op.status === 'negotiation_cancelled_by_agency') { %>
+      <div class="alert alert-info">
+        L'operation a ete annulee par l'agence suite au refus du siege.
+        <% if (op.decision_comment) { %><br/>Motif du siege : <%= op.decision_comment %><% } %>
+      </div>
+    <% } else if (op.status === 'spot_only') { %>
+      <div class="alert alert-success">Taux spot applique, operation finalisee.</div>
+    <% } %>
+  </main>
+</body>
+</html>

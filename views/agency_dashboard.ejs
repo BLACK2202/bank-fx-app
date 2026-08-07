@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Agence - Guichet Devises' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page">
+    <%- include('partials/rate_ticker') %>
+
+    <div class="page-header">
+      <div>
+        <h1>Operations de l'agence <%= currentUser.agenceId %></h1>
+        <p class="page-sub">Toute demande de taux relit le fichier du siege au moment de la saisie.</p>
+      </div>
+      <a class="btn-primary" href="/agence/nouvelle">Nouvelle operation</a>
+    </div>
+
+    <div class="table-wrap">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Client</th>
+            <th>Sens</th>
+            <th>Paire</th>
+            <th>Montant</th>
+            <th>Taux spot</th>
+            <th>Taux final</th>
+            <th>Montant final</th>
+            <th>Statut</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (operations.length === 0) { %>
+          <tr><td colspan="10" class="empty-row">Aucune operation saisie pour le moment. Commencez par "Nouvelle operation".</td></tr>
+          <% } %>
+          <% operations.forEach(function(op) { %>
+          <% const montantFinal = op.taux_final != null ? (op.montant * op.taux_final) : null; %>
+          <tr>
+            <td class="mono">#<%= op.id %></td>
+            <td><%= op.nom_client %></td>
+            <td><span class="tag tag-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
+            <td class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></td>
+            <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
+            <td class="mono"><%= op.taux_spot.toFixed(4) %></td>
+            <td class="mono"><%= op.taux_final != null ? op.taux_final.toFixed(4) : '—' %></td>
+            <td class="mono rate-highlight"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
+            <td><span class="status status-<%= op.status %>">
+              <%
+                const labels = {
+                  spot_only: 'Taux spot applique',
+                  spot_pending_choice: 'A confirmer',
+                  pending_negotiation: 'Negociation en cours',
+                  negotiation_approved_pending_agency: 'Taux siege propose - attente agence',
+                  negotiation_approved: 'Negociation acceptee',
+                  negotiation_refused_pending_agency: 'Refusee par siege - decision agence requise',
+                  negotiation_refused_by_agency: 'Refusee par l\'agence',
+                  negotiation_refused_accepted: 'Refusee par siege - spot accepte',
+                  negotiation_cancelled_by_agency: 'Annulee par l\'agence',
+                };
+              %>
+              <%= labels[op.status] || op.status %>
+            </span></td>
+            <td><a class="btn-link" href="/agence/operation/<%= op.id %>">Ouvrir</a></td>
+          </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

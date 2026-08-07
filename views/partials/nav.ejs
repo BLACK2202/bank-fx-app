@@ -1,0 +1,33 @@
+<header class="topbar">
+  <div class="topbar-brand">
+    <span class="brand-mark">FX</span>
+    <div class="brand-text">
+      <span class="brand-name">Guichet Devises</span>
+      <span class="brand-sub">Cellule des operations de change</span>
+    </div>
+  </div>
+  <% if (currentUser) { %>
+  <div class="topbar-user">
+    <div class="user-id">
+      <span class="user-name"><%= currentUser.fullName %></span>
+      <span class="user-role">
+        <%
+          const roleLabels = {
+            admin: 'Administration',
+            head_office: 'Siege',
+            middle_office: 'Middle Office',
+            back_office: 'Back Office',
+          };
+        %>
+        <%= roleLabels[currentUser.role] || ('Agence ' + currentUser.agenceId) %>
+      </span>
+    </div>
+    <% if (currentUser.role === 'middle_office' || currentUser.role === 'back_office') { %>
+      <a class="btn-ghost" href="/office">Operations</a>
+    <% } %>
+    <form method="POST" action="/logout">
+      <button class="btn-ghost" type="submit">Deconnexion</button>
+    </form>
+  </div>
+  <% } %>
+</header>

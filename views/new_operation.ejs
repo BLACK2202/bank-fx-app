@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Nouvelle operation' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page page-narrow">
+    <div class="page-header">
+      <div>
+        <h1>Nouvelle demande de taux</h1>
+        <p class="page-sub">Le taux sera lu dans le fichier du siege au moment de la validation.</p>
+      </div>
+      <a class="btn-ghost" href="/agence">Retour</a>
+    </div>
+
+    <% if (error) { %>
+      <div class="alert alert-error"><%= error %></div>
+    <% } %>
+
+    <form method="POST" action="/agence/nouvelle" class="card-form">
+      <input type="hidden" name="currency_to" value="TND" />
+      <label>
+        Nature du sujet
+        <input type="text" name="nature_sujet" value="<%= form.nature_sujet || '' %>" placeholder="Ex : reglement fournisseur, voyage client..." required />
+      </label>
+      <label>
+        Nom du client
+        <input type="text" name="nom_client" value="<%= form.nom_client || '' %>" required />
+      </label>
+      <label>
+        Numero de compte
+        <input type="text" name="numero_compte" value="<%= form.numero_compte || '' %>" required />
+      </label>
+      <div class="form-row">
+        <label>
+          Devise source
+          <select name="currency_from" required>
+            <option value="">Choisir...</option>
+            <% devises.forEach(function(d) { %>
+              <% if (d.code !== 'TND') { %>
+                <option value="<%= d.code %>" <%= form.currency_from === d.code ? 'selected' : '' %>><%= d.code %> — <%= d.name %></option>
+              <% } %>
+            <% }); %>
+          </select>
+        </label>
+        <label>
+          Devise cible
+          <input type="text" value="TND - Dinar tunisien" disabled />
+        </label>
+      </div>
+      <div class="form-row">
+        <label>
+          Sens de l'operation
+          <select name="sens" required>
+            <option value="">Choisir...</option>
+            <option value="achat" <%= form.sens === 'achat' ? 'selected' : '' %>>Achat (le client achete la devise)</option>
+            <option value="vente" <%= form.sens === 'vente' ? 'selected' : '' %>>Vente (le client vend la devise)</option>
+          </select>
+        </label>
+      </div>
+      <div class="form-row">
+        <label>
+          Date valeur
+          <input type="date" name="date_valeur" value="<%= form.date_valeur || '' %>" required />
+        </label>
+        <label>
+          Montant
+          <input type="number" step="0.01" min="0.01" name="montant" value="<%= form.montant || '' %>" required />
+        </label>
+      </div>
+      <p class="hint">La devise cible est fixee a TND. En dessous de 10&nbsp;000 de devise source, le taux spot vers TND s'applique automatiquement, sans possibilite de negociation.</p>
+      <button class="btn-primary" type="submit">Obtenir le taux</button>
+    </form>
+  </main>
+</body>
+</html>

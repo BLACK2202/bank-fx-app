@@ -1,0 +1,25 @@
+<% if (ratesError) { %>
+  <div class="ticker ticker-error">
+    Fichier de taux du siege inaccessible : <%= ratesError %>
+  </div>
+<% } else if (snapshot) { %>
+  <div class="ticker">
+    <div class="ticker-row">
+      <% Object.keys(snapshot.rates).forEach(function(code) { %>
+        <% const r = snapshot.rates[code]; %>
+        <div class="ticker-cell">
+          <span class="ticker-code"><%= code %></span>
+          <span class="ticker-pair">
+            <span class="ticker-buy"><%= r.achat.toFixed(4) %></span>
+            <span class="ticker-sep">/</span>
+            <span class="ticker-sell"><%= r.vente.toFixed(4) %></span>
+          </span>
+        </div>
+      <% }); %>
+    </div>
+    <div class="ticker-meta">
+      Fichier du siege modifie le <%= new Date(snapshot.fileModifiedAt).toLocaleString('fr-FR') %>
+      &middot; verifie a l'instant (<%= new Date(snapshot.checkedAt).toLocaleTimeString('fr-FR') %>)
+    </div>
+  </div>
+<% } %>
