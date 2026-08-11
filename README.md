@@ -1,5 +1,7 @@
 # Guichet Devises
 
+**Version:** 1.1.0 — updated 2026-08-11
+
 Guichet Devises is a small bank-facing FX quotation workflow application.
 Agencies submit foreign-exchange operations, the app reads the bank head
 office rate sheet from Excel, computes a spot rate, and decides whether the
