@@ -34,6 +34,15 @@ The workflow is intentionally simple:
 8. If head office approves, the approved final rate from siege is applied.
 9. If head office refuses, the agency can accept the spot rate or cancel the operation. If head office proposes another rate, the agency can accept it, send a counteroffer, or cancel.
 
+## Recent updates
+
+- Audit / history: all operation state changes and key actions are recorded in an `operation_audit` table and surfaced in the UI. Agencies see an operation's audit trail on the operation detail page; admins can view a full operation history at `/admin/operations/:id/history`.
+- Negotiation flow improvements: agencies can submit a requested counteroffer, head office sees the requested rate when deciding, and both parties can exchange counteroffers until a final rate or cancellation.
+- Account entry safety: the `Numero de compte` field now requires exactly 20 digits and must be entered twice; client-side validation prevents submission until both entries match and copy/paste is disabled for those fields.
+- Session and account enforcement: sessions use rolling cookies with inactivity timeout (configurable via `.env`) and logins block disabled users/agencies.
+- Office search & export: the office dashboard supports searching (ID, agency, client, status, currencies) and the Excel export respects the applied search and date filters.
+- Default workbook path: the app reads the head-office rate workbook from `data/taux.xlsx` by default; the path can be changed with `RATES_FILE_PATH`.
+
 ## Technology Stack
 
 - Node.js 22.5 or newer
