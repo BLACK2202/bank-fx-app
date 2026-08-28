@@ -34,11 +34,11 @@
             <td class="mono">#<%= op.id %></td>
             <td><%= op.agence_name %></td>
             <td><%= op.nom_client %></td>
-            <td><span class="tag tag-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
+            <td><span class="tag tag-<%= op.sens %> direction-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
             <td class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></td>
             <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
             <td class="mono"><%= op.taux_final != null ? op.taux_final.toFixed(4) : '—' %></td>
-            <td class="mono rate-highlight"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
+            <td class="mono rate-highlight direction-<%= op.sens %>"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
             <td><%= op.status %></td>
           </tr>
           <% }); %>

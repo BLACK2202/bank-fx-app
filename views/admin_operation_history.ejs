@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Historique operation #' + op.id }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page page-narrow">
+    <div class="page-header">
+      <div>
+        <h1>Historique de l'opération #<%= op.id %></h1>
+        <p class="page-sub"><%= op.nature_sujet %> — Agence <%= op.agence_id %></p>
+      </div>
+      <a class="btn-ghost" href="/admin">Retour</a>
+    </div>
+
+    <div class="detail-grid">
+      <div class="detail-item"><span>Client</span><strong><%= op.nom_client %></strong></div>
+      <div class="detail-item"><span>Montant</span><strong class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></strong></div>
+      <div class="detail-item"><span>Taux spot</span><strong><%= op.taux_spot.toFixed(4) %></strong></div>
+      <div class="detail-item"><span>Statut courant</span><strong><%= op.status %></strong></div>
+    </div>
+
+    <div class="card-form">
+      <h2>Journal des actions</h2>
+      <% if (audit && audit.length) { %>
+        <div class="table-wrap">
+          <table class="ledger">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Utilisateur</th>
+                <th>Action</th>
+                <th>Statut</th>
+                <th>Taux demandé</th>
+                <th>Taux final</th>
+                <th>Commentaire</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% audit.forEach(function(entry) { %>
+                <tr>
+                  <td><%= entry.created_at %></td>
+                  <td><%= entry.actor_username || entry.actor_role || 'Système' %></td>
+                  <td><%= entry.action %></td>
+                  <td><%= entry.from_status || '—' %> → <%= entry.to_status || '—' %></td>
+                  <td><%= entry.requested_taux != null ? Number(entry.requested_taux).toFixed(4) : '—' %></td>
+                  <td><%= entry.final_taux != null ? Number(entry.final_taux).toFixed(4) : '—' %></td>
+                  <td><%= entry.comment || '—' %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p>Aucun historique disponible pour cette opération.</p>
+      <% } %>
+    </div>
+
+    <div class="card-form">
+      <h2>Journal des erreurs</h2>
+      <% if (errors && errors.length) { %>
+        <div class="table-wrap">
+          <table class="ledger">
+            <thead>
+              <tr><th>Date</th><th>Utilisateur</th><th>Action</th><th>Route</th><th>Erreur</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+              <% errors.forEach(function(entry) { %>
+                <tr>
+                  <td><%= entry.created_at %></td>
+                  <td><%= entry.actor_username || entry.actor_role || 'Système' %></td>
+                  <td><%= entry.action || '—' %></td>
+                  <td class="mono"><%= entry.route || '—' %></td>
+                  <td><%= entry.error_message %></td>
+                  <td class="mono"><%= entry.request_details || '—' %></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } else { %>
+        <p>Aucune erreur enregistrée pour cette operation.</p>
+      <% } %>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head><%- include('partials/head', { title: 'Back Office - Traceabilite' }) %></head>
+<body>
+  <%- include('partials/nav') %>
+  <main class="page page-office">
+    <div class="page-header">
+      <div>
+        <h1>Traceabilite des utilisateurs</h1>
+        <p class="page-sub">Chaque requete authentifiee est enregistree avec sa date, son heure, son utilisateur et son resultat.</p>
+      </div>
+    </div>
+
+    <form method="GET" action="/office/activity" class="card-form" style="margin-bottom: 1.5rem;">
+      <label>
+        Recherche
+        <input type="search" name="search" value="<%= searchTerm || '' %>" placeholder="Utilisateur, role, route, operation..." />
+      </label>
+      <button class="btn-primary" type="submit">Filtrer</button>
+    </form>
+
+    <div class="table-wrap">
+      <table class="ledger">
+        <thead>
+          <tr>
+            <th>Date et heure</th><th>Utilisateur</th><th>Role</th><th>Methode</th>
+            <th>Route</th><th>Operation</th><th>Champs envoyes</th><th>Resultat</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!activities.length) { %>
+            <tr><td colspan="8" class="empty-row">Aucune activite enregistree.</td></tr>
+          <% } %>
+          <% activities.forEach(function(entry) { %>
+            <tr>
+              <td class="mono"><%= entry.created_at %></td>
+              <td><%= entry.username || '—' %></td>
+              <td><%= entry.actor_role || '—' %></td>
+              <td class="mono"><%= entry.method %></td>
+              <td class="mono"><%= entry.route %></td>
+              <td class="mono"><%= entry.operation_id || '—' %></td>
+              <td class="mono"><%= entry.request_keys || '—' %></td>
+              <td><%= entry.response_status || '—' %></td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  </main>
+</body>
+</html>

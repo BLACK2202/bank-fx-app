@@ -28,8 +28,18 @@
       </label>
       <label>
         Numero de compte
-        <input type="text" name="numero_compte" value="<%= form.numero_compte || '' %>" required />
+        <input id="numero_compte" type="text" name="numero_compte" value="<%= form.numero_compte || '' %>" placeholder="20 chiffres" pattern="\d{20}" maxlength="20" inputmode="numeric" autocomplete="off" onpaste="return false" oncopy="return false" oncut="return false" required />
       </label>
+      <label>
+        Verification du numero de compte
+        <input id="numero_compte_confirm" type="text" name="numero_compte_confirm" value="<%= form.numero_compte_confirm || '' %>" placeholder="Retapez le numero de compte" pattern="\d{20}" maxlength="20" inputmode="numeric" autocomplete="off" onpaste="return false" oncopy="return false" oncut="return false" required />
+      </label>
+      <div id="account-check-message-error" class="alert alert-error" role="alert" style="display: none; margin-bottom: 1rem;">
+        Les deux numéros de compte doivent être identiques et comporter exactement 20 chiffres.
+      </div>
+      <div id="account-check-message-success" class="alert alert-success" role="status" style="display: none; margin-bottom: 1rem;">
+        <span style="font-weight: bold; margin-right: 0.5rem;">✔</span> Numéro confirmé — les deux champs correspondent.
+      </div>
       <div class="form-row">
         <label>
           Devise source
@@ -68,8 +78,60 @@
         </label>
       </div>
       <p class="hint">La devise cible est fixee a TND. En dessous de 10&nbsp;000 de devise source, le taux spot vers TND s'applique automatiquement, sans possibilite de negociation.</p>
-      <button class="btn-primary" type="submit">Obtenir le taux</button>
+      <button id="submit-button" class="btn-primary" type="submit">Obtenir le taux</button>
     </form>
   </main>
+
+  <script>
+    (function() {
+      const accountField = document.getElementById('numero_compte');
+      const confirmField = document.getElementById('numero_compte_confirm');
+      const messageError = document.getElementById('account-check-message-error');
+      const messageSuccess = document.getElementById('account-check-message-success');
+      const submitButton = document.getElementById('submit-button');
+
+      function validateAccounts() {
+        const value = accountField.value.trim();
+        const confirm = confirmField.value.trim();
+        const isValidFormat = /^[0-9]{20}$/.test(value) && /^[0-9]{20}$/.test(confirm);
+        const isMatch = value === confirm && isValidFormat;
+
+        if (!value && !confirm) {
+          messageError.style.display = 'none';
+          messageSuccess.style.display = 'none';
+          submitButton.disabled = false;
+          return;
+        }
+
+        const errorMessage = [];
+        if (!/^[0-9]{20}$/.test(value) || !/^[0-9]{20}$/.test(confirm)) {
+          errorMessage.push('Le numéro doit contenir exactement 20 chiffres.');
+        }
+        if (value !== confirm) {
+          errorMessage.push('Les deux numéros doivent correspondre.');
+        }
+
+        if (errorMessage.length > 0) {
+          messageError.textContent = errorMessage.join(' ');
+          messageError.style.display = 'block';
+          messageSuccess.style.display = 'none';
+          submitButton.disabled = true;
+        } else if (isMatch) {
+          messageSuccess.style.display = 'block';
+          messageError.style.display = 'none';
+          submitButton.disabled = false;
+        } else {
+          messageError.textContent = 'Vérifiez les numéros de compte.';
+          messageError.style.display = 'block';
+          messageSuccess.style.display = 'none';
+          submitButton.disabled = true;
+        }
+      }
+
+      accountField.addEventListener('input', validateAccounts);
+      confirmField.addEventListener('input', validateAccounts);
+      validateAccounts();
+    })();
+  </script>
 </body>
 </html>
