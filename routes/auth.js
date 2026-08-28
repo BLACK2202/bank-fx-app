@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const db = require("../db");
+const activity = require("../services/activity");
 
 const router = express.Router();
 
@@ -31,6 +32,13 @@ router.post("/login", (req, res) => {
     !user.is_active ||
     !bcrypt.compareSync(password, user.password_hash)
   ) {
+    activity.recordActivity({
+      user: { id: null, username: rawUsername || "unknown", role: "anonymous" },
+      method: req.method,
+      route: req.originalUrl,
+      requestKeys: ["username", "password"],
+      responseStatus: 200,
+    });
     return res.render("login", { error: "Identifiants incorrects." });
   }
   if (user.role === "agency") {
@@ -48,15 +56,59 @@ router.post("/login", (req, res) => {
     role: user.role,
     agenceId: user.agency_id,
   };
+  activity.recordActivity({
+    user: req.session.user,
+    method: req.method,
+    route: req.originalUrl,
+    requestKeys: ["username", "password"],
+    responseStatus: 302,
+  });
   res.redirect("/");
 });
 
 router.post("/logout", (req, res) => {
+  if (req.session.user) {
+    activity.recordActivity({
+      user: req.session.user,
+      method: req.method,
+      route: req.originalUrl,
+      requestKeys: [],
+      responseStatus: 302,
+    });
+  }
   req.session.destroy(() => res.redirect("/login"));
 });
 
 function requireAuth(req, res, next) {
   if (!req.session.user) return res.redirect("/login");
+
+  const user = db
+    .prepare("SELECT * FROM users WHERE id = ?")
+    .get(req.session.user.id);
+
+  if (!user || !user.is_active) {
+    req.session.destroy(() => res.redirect("/login"));
+    return;
+  }
+
+  if (user.role === "agency") {
+    const agency = db
+      .prepare("SELECT * FROM agencies WHERE id = ?")
+      .get(user.agency_id);
+    if (!agency || !agency.is_active) {
+      req.session.destroy(() => res.redirect("/login"));
+      return;
+    }
+  }
+
+  req.session.user = {
+    id: user.id,
+    username: user.username,
+    fullName: user.full_name,
+    role: user.role,
+    agenceId: user.agency_id,
+  };
+
   next();
 }
 

@@ -25,6 +25,9 @@
     <% if (currentUser.role === 'middle_office' || currentUser.role === 'back_office') { %>
       <a class="btn-ghost" href="/office">Operations</a>
     <% } %>
+    <% if (currentUser.role === 'back_office') { %>
+      <a class="btn-ghost" href="/office/activity">Traceabilite</a>
+    <% } %>
     <form method="POST" action="/logout">
       <button class="btn-ghost" type="submit">Deconnexion</button>
     </form>

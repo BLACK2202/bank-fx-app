@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
-<head><%- include('partials/head', { title: 'Siege - File de negociation' }) %></head>
+<head><%- include('partials/head', { title: 'Siege - File de verification' }) %></head>
 <body>
   <%- include('partials/nav') %>
   <main class="page">
@@ -8,8 +8,8 @@
 
     <div class="page-header">
       <div>
-        <h1>File des negociations en attente</h1>
-        <p class="page-sub">Chaque demande porte le taux spot au moment de la saisie, pour comparaison.</p>
+        <h1>File des operations a traiter</h1>
+        <p class="page-sub">Les demandes de taux et les operations validees par l'agence attendent ici le siege.</p>
       </div>
       <a class="btn-ghost" href="/siege/toutes">Voir toutes les operations</a>
     </div>
@@ -25,26 +25,26 @@
             <th>Paire</th>
             <th>Montant</th>
             <th>Taux spot</th>
-            <th>Demande</th>
+            <th>Etat</th>
+            <th>Etat / demande</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           <% if (pending.length === 0) { %>
-          <tr><td colspan="9" class="empty-row">Aucune negociation en attente.</td></tr>
+          <tr><td colspan="10" class="empty-row">Aucune operation en attente.</td></tr>
           <% } %>
           <% pending.forEach(function(op) { %>
           <tr>
             <td class="mono">#<%= op.id %></td>
             <td><%= op.agence_name %></td>
             <td><%= op.nom_client %></td>
-            <td><span class="tag tag-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
+            <td><span class="tag tag-<%= op.sens %> direction-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
             <td class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></td>
             <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
             <td class="mono"><%= op.taux_spot.toFixed(4) %></td>
-            <td class="mono rate-highlight">
-              <%= op.requested_taux != null ? ('Contre-offre: ' + Number(op.requested_taux).toFixed(4)) : 'Amelioration demandee' %>
-            </td>
+            <td><span class="status status-<%= op.status %>"><%= op.status === 'pending_siege_validation' ? 'Validation agence' : 'Negociation' %></span></td>
+            <td class="mono rate-highlight"><%= op.status === 'pending_siege_validation' ? 'Validation agence - reference requise' : (op.requested_taux != null ? ('Contre-offre: ' + Number(op.requested_taux).toFixed(4)) : 'Amelioration demandee') %></td>
             <td><a class="btn-link" href="/siege/negociation/<%= op.id %>">Traiter</a></td>
           </tr>
           <% }); %>

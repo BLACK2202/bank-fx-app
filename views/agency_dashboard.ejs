@@ -39,20 +39,22 @@
           <tr>
             <td class="mono">#<%= op.id %></td>
             <td><%= op.nom_client %></td>
-            <td><span class="tag tag-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
+            <td><span class="tag tag-<%= op.sens %> direction-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></span></td>
             <td class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></td>
             <td class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></td>
             <td class="mono"><%= op.taux_spot.toFixed(4) %></td>
             <td class="mono"><%= op.taux_final != null ? op.taux_final.toFixed(4) : '—' %></td>
-            <td class="mono rate-highlight"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
+            <td class="mono rate-highlight direction-<%= op.sens %>"><%= montantFinal != null ? montantFinal.toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' ' + (op.currency_to || op.devise) : '—' %></td>
             <td><span class="status status-<%= op.status %>">
               <%
                 const labels = {
                   spot_only: 'Taux spot applique',
+                  pending_siege_validation: 'Validation agence - attente siege',
                   spot_pending_choice: 'A confirmer',
                   pending_negotiation: 'Negociation en cours',
                   negotiation_approved_pending_agency: 'Taux siege propose - attente agence',
                   negotiation_approved: 'Negociation acceptee',
+                  validated_by_siege: 'Validee par le siege',
                   negotiation_refused_pending_agency: 'Refusee par siege - decision agence requise',
                   negotiation_refused_by_agency: 'Refusee par l\'agence',
                   negotiation_refused_accepted: 'Refusee par siege - spot accepte',

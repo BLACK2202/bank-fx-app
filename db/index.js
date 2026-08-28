@@ -45,12 +45,59 @@ CREATE TABLE IF NOT EXISTS operations (
   taux_source_date TEXT,
   taux_final REAL,
   requested_taux REAL,
+  reference_number TEXT,
   status TEXT NOT NULL DEFAULT 'spot_only',
   decision_comment TEXT,
   created_by INTEGER REFERENCES users(id),
   decided_by INTEGER REFERENCES users(id),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   decided_at TEXT
+);
+`);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS operation_audit (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  operation_id INTEGER NOT NULL REFERENCES operations(id),
+  actor_id INTEGER,
+  actor_role TEXT,
+  action TEXT NOT NULL,
+  from_status TEXT,
+  to_status TEXT,
+  spot_rate REAL,
+  requested_taux REAL,
+  final_taux REAL,
+  comment TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS operation_errors (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  operation_id INTEGER REFERENCES operations(id),
+  actor_id INTEGER REFERENCES users(id),
+  actor_role TEXT,
+  route TEXT,
+  action TEXT,
+  error_message TEXT NOT NULL,
+  request_details TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+`);
+
+db.exec(`
+CREATE TABLE IF NOT EXISTS user_activity (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER REFERENCES users(id),
+  username TEXT,
+  actor_role TEXT,
+  method TEXT NOT NULL,
+  route TEXT NOT NULL,
+  operation_id INTEGER REFERENCES operations(id),
+  request_keys TEXT,
+  response_status INTEGER,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 `);
 
@@ -63,6 +110,7 @@ function ensureColumn(tableName, columnName, definition) {
 
 ensureColumn("operations", "currency_from", "TEXT");
 ensureColumn("operations", "currency_to", "TEXT");
+ensureColumn("operations", "reference_number", "TEXT");
 ensureColumn("agencies", "is_active", "INTEGER NOT NULL DEFAULT 1");
 ensureColumn("users", "is_active", "INTEGER NOT NULL DEFAULT 1");
 

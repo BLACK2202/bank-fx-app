@@ -3,7 +3,7 @@
 <head><%- include('partials/head', { title: 'Decision - Operation #' + op.id }) %></head>
 <body>
   <%- include('partials/nav') %>
-  <main class="page page-narrow">
+  <main class="page page-narrow" data-operation-amount="<%= op.montant %>">
     <div class="page-header">
       <div>
         <h1>Operation #<%= op.id %> — <%= op.nom_client %></h1>
@@ -23,7 +23,7 @@
       </div>
       <div class="rate-block rate-block-final">
         <span class="rate-label">Demande d'amelioration</span>
-        <span class="rate-value">Transmise par l'agence</span>
+        <span class="rate-value"><%= op.status === 'pending_siege_validation' ? 'Validation agence' : 'Transmise par l agence' %></span>
       </div>
       <% if (op.requested_taux != null) { %>
       <div class="rate-block">
@@ -33,17 +33,31 @@
       <% } %>
       <div class="rate-block" id="final-amount-preview-block">
         <span class="rate-label">Montant final estime (<%= op.currency_to || op.devise %>)</span>
-        <span class="rate-value" id="final-amount-preview">—</span>
+        <span class="rate-value direction-<%= op.sens %>" id="final-amount-preview">—</span>
       </div>
     </div>
 
     <div class="detail-grid">
-      <div class="detail-item"><span>Sens</span><strong><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></strong></div>
+      <div class="detail-item"><span>Sens</span><strong class="direction-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></strong></div>
       <div class="detail-item"><span>Paire de devises</span><strong class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></strong></div>
       <div class="detail-item"><span>Montant</span><strong class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></strong></div>
       <div class="detail-item"><span>Compte</span><strong class="mono"><%= op.numero_compte %></strong></div>
     </div>
 
+    <% if (op.status === 'pending_siege_validation') { %>
+    <form method="POST" action="/siege/negociation/<%= op.id %>/decision" class="card-form">
+      <input type="hidden" name="decision" value="validate" />
+      <label>
+        Reference de l'operation
+        <input type="text" name="reference_number" value="<%= typeof form !== 'undefined' && form.reference_number ? form.reference_number : '' %>" minlength="3" maxlength="50" pattern="[A-Za-z0-9][A-Za-z0-9/-]{2,49}" required />
+      </label>
+      <label>
+        Commentaire
+        <textarea name="comment" rows="2" placeholder="Optionnel"><%= typeof form !== 'undefined' && form.comment ? form.comment : '' %></textarea>
+      </label>
+      <button class="btn-primary" type="submit">Verifier et valider l'operation</button>
+    </form>
+    <% } else { %>
     <form method="POST" action="/siege/negociation/<%= op.id %>/decision" class="card-form">
       <% if (op.requested_taux != null) { %>
       <div class="detail-item detail-item-wide">
@@ -64,13 +78,52 @@
         <button class="btn-secondary" type="submit" name="decision" value="refuse">Refuser et renvoyer a l'agence</button>
       </div>
     </form>
+    <% } %>
+
+    <div class="card-form">
+      <h2>Historique de l'opération</h2>
+      <% if (audit && audit.length) { %>
+      <div class="table-wrap">
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Utilisateur</th>
+              <th>Action</th>
+              <th>Statut</th>
+              <th>Taux demandé</th>
+              <th>Taux final</th>
+              <th>Commentaire</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% audit.forEach(function(entry) { %>
+            <tr>
+              <td><%= entry.created_at %></td>
+              <td><%= entry.actor_username || entry.actor_role || 'Système' %></td>
+              <td><%= entry.action %></td>
+              <td><%= entry.from_status || '—' %> → <%= entry.to_status || '—' %></td>
+              <td><%= entry.requested_taux != null ? Number(entry.requested_taux).toFixed(4) : '—' %></td>
+              <td><%= entry.final_taux != null ? Number(entry.final_taux).toFixed(4) : '—' %></td>
+              <td><%= entry.comment || '—' %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+        <p>Aucun historique disponible pour cette operation.</p>
+      <% } %>
+    </div>
 
     <script>
       (function () {
-        const amount = Number(<%= op.montant %>);
+        const amount = Number(document.querySelector('main').dataset.operationAmount);
         const targetCurrency = '<%= op.currency_to || op.devise %>';
         const input = document.getElementById('final_taux_input');
         const preview = document.getElementById('final-amount-preview');
+
+        if (!input) return;
 
         function renderPreview() {
           const rate = Number(input.value);

@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const db = require("../db");
+const ops = require("../services/operations");
 const { requireRole } = require("./auth");
 
 const router = express.Router();
@@ -37,6 +38,30 @@ function loadDashboardData() {
 router.get("/", (req, res) => {
   const { agencies, users } = loadDashboardData();
   res.render("admin_dashboard", { agencies, users, error: null, form: {} });
+});
+
+router.get("/operations/history", (req, res) => {
+  const { op_id } = req.query;
+  if (op_id) {
+    return res.redirect(
+      `/admin/operations/${encodeURIComponent(op_id)}/history`,
+    );
+  }
+
+  const { agencies, users } = loadDashboardData();
+  res.render("admin_dashboard", { agencies, users, error: null, form: {} });
+});
+
+router.get("/operations/:id/history", (req, res) => {
+  const op = ops.getOperation(req.params.id);
+  if (!op)
+    return res
+      .status(404)
+      .render("error", { message: "Operation introuvable." });
+
+  const audit = ops.getAuditTrail(req.params.id);
+  const errors = ops.getErrorTrail(req.params.id);
+  res.render("admin_operation_history", { op, audit, errors });
 });
 
 router.post("/agencies", (req, res) => {

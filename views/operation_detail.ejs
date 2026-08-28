@@ -19,10 +19,11 @@
     <div class="detail-grid">
       <div class="detail-item"><span>Client</span><strong><%= op.nom_client %></strong></div>
       <div class="detail-item"><span>Compte</span><strong class="mono"><%= op.numero_compte %></strong></div>
-      <div class="detail-item"><span>Sens</span><strong><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></strong></div>
+      <div class="detail-item"><span>Sens</span><strong class="direction-<%= op.sens %>"><%= op.sens === 'achat' ? 'Achat' : 'Vente' %></strong></div>
       <div class="detail-item"><span>Paire de devises</span><strong class="mono"><%= op.currency_from || op.devise %> -> <%= op.currency_to || op.devise %></strong></div>
       <div class="detail-item"><span>Montant</span><strong class="mono"><%= op.montant.toLocaleString('fr-FR') %> <%= op.currency_from || op.devise %></strong></div>
       <div class="detail-item"><span>Date valeur</span><strong class="mono"><%= op.date_valeur %></strong></div>
+      <% if (op.reference_number) { %><div class="detail-item"><span>Reference siege</span><strong class="mono"><%= op.reference_number %></strong></div><% } %>
     </div>
 
     <div class="rate-panel">
@@ -42,7 +43,7 @@
     <% if (op.taux_final != null && op.status !== 'negotiation_approved_pending_agency') { %>
       <div class="detail-item detail-item-wide">
         <span>Montant final</span>
-        <strong class="mono"><%= (op.montant * op.taux_final).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) %> <%= op.currency_to || op.devise %></strong>
+        <strong class="mono direction-<%= op.sens %>"><%= (op.montant * op.taux_final).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) %> <%= op.currency_to || op.devise %></strong>
       </div>
     <% } %>
 
@@ -68,6 +69,8 @@
       <div class="alert alert-info">
         Demande d'amelioration transmise au siege, en attente de decision.
       </div>
+    <% } else if (op.status === 'pending_siege_validation') { %>
+      <div class="alert alert-warning">Validation agence enregistree. L'operation attend la verification du siege.</div>
     <% } else if (op.status === 'negotiation_approved') { %>
       <div class="alert alert-success">
         Le siege a valide un taux de <strong><%= op.taux_final.toFixed(4) %></strong>.
@@ -115,11 +118,6 @@
           </form>
         </div>
       </div>
-    <% } else if (op.status === 'negotiation_refused_accepted') { %>
-      <div class="alert alert-success">
-        Le siege a refuse l'amelioration. L'agence a confirme le taux spot <strong><%= op.taux_final.toFixed(4) %></strong>.
-        <% if (op.decision_comment) { %><br/>Motif du siege : <%= op.decision_comment %><% } %>
-      </div>
     <% } else if (op.status === 'negotiation_cancelled_by_agency') { %>
       <div class="alert alert-info">
         L'operation a ete annulee par l'agence suite au refus du siege.
@@ -127,7 +125,45 @@
       </div>
     <% } else if (op.status === 'spot_only') { %>
       <div class="alert alert-success">Taux spot applique, operation finalisee.</div>
+    <% } else if (op.status === 'validated_by_siege') { %>
+      <div class="alert alert-success">Operation verifiee et validee par le siege avec la reference <strong><%= op.reference_number %></strong>.</div>
     <% } %>
+
+    <div class="card-form">
+      <h2>Historique de l'opération</h2>
+      <% if (audit && audit.length) { %>
+      <div class="table-wrap">
+        <table class="ledger">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Utilisateur</th>
+              <th>Action</th>
+              <th>Statut</th>
+              <th>Taux demandé</th>
+              <th>Taux final</th>
+              <th>Commentaire</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% audit.forEach(function(entry) { %>
+            <tr>
+              <td><%= entry.created_at %></td>
+              <td><%= entry.actor_username || entry.actor_role || 'Système' %></td>
+              <td><%= entry.action %></td>
+              <td><%= entry.from_status || '—' %> → <%= entry.to_status || '—' %></td>
+              <td><%= entry.requested_taux != null ? Number(entry.requested_taux).toFixed(4) : '—' %></td>
+              <td><%= entry.final_taux != null ? Number(entry.final_taux).toFixed(4) : '—' %></td>
+              <td><%= entry.comment || '—' %></td>
+            </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+      <% } else { %>
+        <p>Aucun historique disponible pour cette operation.</p>
+      <% } %>
+    </div>
   </main>
 </body>
 </html>

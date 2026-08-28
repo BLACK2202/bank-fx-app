@@ -115,6 +115,7 @@ h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
 
 /* ---------- Layout ---------- */
 .page { max-width: 1080px; margin: 0 auto; padding: 1.75rem; }
+.page-office { max-width: 1400px; }
 .page-narrow { max-width: 640px; }
 
 .page-header {
@@ -151,8 +152,9 @@ h2 { font-size: 1.1rem; margin-bottom: 0.75rem; }
 .ticker-error { background: #4A1F1F; color: #F3D5D5; font-size: 0.85rem; }
 
 /* ---------- Ledger table ---------- */
-.table-wrap { background: var(--paper-2); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
-table.ledger { width: 100%; border-collapse: collapse; }
+.table-wrap { background: var(--paper-2); border: 1px solid var(--border); border-radius: 6px; overflow-x: auto; }
+table.ledger { width: 100%; min-width: 900px; border-collapse: collapse; }
+.page-office table.ledger { min-width: 1240px; }
 .ledger th {
   text-align: left;
   font-size: 0.7rem;
@@ -165,11 +167,14 @@ table.ledger { width: 100%; border-collapse: collapse; }
 }
 .ledger td { padding: 0.7rem 0.9rem; border-bottom: 1px solid #EEEFF1; font-size: 0.87rem; }
 .ledger tr:last-child td { border-bottom: none; }
+.reference-cell { min-width: 12rem; white-space: nowrap; }
 .empty-row { text-align: center; color: var(--text-muted); padding: 1.5rem !important; }
 
 .tag { padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.72rem; font-weight: 600; }
 .tag-achat { background: #E6F1EC; color: var(--green); }
 .tag-vente { background: #F6E7E7; color: var(--red); }
+.direction-achat { color: var(--green); }
+.direction-vente { color: var(--red); }
 
 .status { font-size: 0.78rem; }
 .status-negotiation_approved, .status-spot_only { color: var(--green); }
@@ -248,6 +253,8 @@ input:focus, select:focus, textarea:focus {
 .rate-value { font-family: var(--font-mono); font-size: 1.6rem; font-variant-numeric: tabular-nums; }
 .rate-note { font-size: 0.72rem; opacity: 0.75; }
 .rate-highlight { color: var(--gold-dark); font-weight: 600; }
+.rate-highlight.direction-achat { color: var(--green); }
+.rate-highlight.direction-vente { color: var(--red); }
 
 /* ---------- Alerts ---------- */
 .alert { padding: 0.8rem 1rem; border-radius: 6px; font-size: 0.87rem; margin-bottom: 1rem; }

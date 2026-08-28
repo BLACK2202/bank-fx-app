@@ -1,6 +1,6 @@
 # Guichet Devises
 
-**Version:** 1.1.0 — updated 2026-08-11
+**Version:** 1.2.0 — updated 2026-08-28
 
 Guichet Devises is a small bank-facing FX quotation workflow application.
 Agencies submit foreign-exchange operations, the app reads the bank head
@@ -33,8 +33,9 @@ The workflow is intentionally simple:
 5. If the amount is strictly less than 10000, the spot rate is applied automatically and no negotiation is allowed.
 6. If the amount is 10000 or more, the agency can accept the spot rate or request an improvement from head office, optionally including a desired counteroffer rate.
 7. Head office reviews pending negotiations, sees any agency requested rate, and can approve with a final rate, refuse, or return a new proposal to the agency.
-8. If head office approves, the approved final rate from siege is applied.
-9. If head office refuses, the agency can accept the spot rate or cancel the operation. If head office proposes another rate, the agency can accept it, send a counteroffer, or cancel.
+8. After the agency accepts a rate, the operation waits for siege verification.
+9. Head office enters a reference number and validates the operation.
+10. If head office refuses, the agency can accept the spot rate or cancel the operation. If head office proposes another rate, the agency can accept it, send a counteroffer, or cancel.
 
 ## Recent updates
 
@@ -44,6 +45,8 @@ The workflow is intentionally simple:
 - Session and account enforcement: sessions use rolling cookies with inactivity timeout (configurable via `.env`) and logins block disabled users/agencies.
 - Office search & export: the office dashboard supports searching (ID, agency, client, status, currencies) and the Excel export respects the applied search and date filters.
 - Default workbook path: the app reads the head-office rate workbook from `data/taux.xlsx` by default; the path can be changed with `RATES_FILE_PATH`.
+- Siege verification: agency-accepted operations enter `pending_siege_validation`; head office records a reference number and moves them to `validated_by_siege`.
+- User traceability: every authenticated request, login attempt, logout, and operation error is timestamped in `user_activity` or `operation_errors`. Back office users can review the activity log at `/office/activity`.
 
 ## Technology Stack
 
@@ -67,10 +70,12 @@ server.js                  Express entry point
 db/index.js                SQLite schema and seed data
 services/excelRates.js     Fresh Excel rate-sheet reader and spot-rate logic
 services/operations.js     Business rules and operation state transitions
+services/activity.js       User activity logging and traceability queries
 routes/auth.js             Login and logout routes
 routes/agency.js           Agency dashboard and operation submission flow
 routes/headoffice.js       Head office negotiation queue and decisions
 views/                     EJS pages and shared partials
+views/office_activity.ejs  Back-office user activity log
 public/css/style.css       Application styling
 data/taux.xlsx             Default head-office rate sheet
 data/make_sample_rates.js  Helper to regenerate the sample rate workbook
@@ -144,12 +149,15 @@ The rate convention is:
 ### Persistence
 
 [`db/index.js`](db/index.js) creates and seeds the database on startup.
-It creates four tables:
+It creates seven tables:
 
 - `agencies`
 - `users`
 - `devises`
 - `operations`
+- `operation_audit`
+- `operation_errors`
+- `user_activity`
 
 Seed data includes 101 agencies (`000` to `100`), a small set of currencies,
 and demo users for the admin, the head office, and three agencies.
@@ -196,6 +204,7 @@ An operation stores the full FX request and its life cycle:
 - spot rate computed from the Excel workbook
 - final rate once the workflow is decided
 - negotiation request rate, if any
+- siege reference number once the operation is validated
 - status and decision metadata
 
 Typical status values are:
@@ -205,11 +214,22 @@ Typical status values are:
 - `pending_negotiation`
 - `negotiation_approved_pending_agency`
 - `negotiation_approved`
+- `pending_siege_validation`
+- `validated_by_siege`
 - `negotiation_refused_pending_agency`
 - `negotiation_refused_accepted`
 - `negotiation_cancelled_by_agency`
 
 The `operations` table also stores `requested_taux` when the agency submits a desired counteroffer during negotiation.
+
+### Audit and traceability
+
+`operation_audit` records successful operation state transitions. `operation_errors`
+records failed operation actions with the operation, actor, route, action, error
+message, and request field names. `user_activity` records every authenticated
+request, plus successful and failed login attempts and logouts, with the user,
+role, method, route, operation ID when available, submitted field names, HTTP
+status, and timestamp. Password values and request bodies are never stored.
 
 ## User Flows
 
@@ -240,9 +260,14 @@ The head-office dashboard shows all pending negotiations. Head office can:
 The office dashboard is available to `middle_office` and `back_office` users.
 They can:
 
-- review every operation across all agencies
+- `middle_office`: review every operation across all agencies and all statuses
+- `back_office`: review only `validated_by_siege` operations that have a siege reference
 - filter operations by date range
-- download an Excel report for the selected period
+- search by operation ID, agency, client, status, currency, or siege reference
+- download an Excel report matching the visible data
+- review user activity at `/office/activity` (Back Office only)
+
+Both office roles are read-only and cannot modify operations.
 
 ## Rate Sheet Format
 

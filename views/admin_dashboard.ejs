@@ -65,6 +65,14 @@
         </label>
         <button class="btn-primary" type="submit">Creer le compte</button>
       </form>
+      <form method="GET" action="/admin/operations/history" class="card-form" style="flex: 1;">
+        <h2>Historique d'opération</h2>
+        <label>
+          ID d'opération
+          <input type="text" name="op_id" value="<%= form.op_id || '' %>" placeholder="Ex : 42" required />
+        </label>
+        <button class="btn-primary" type="submit">Voir l'historique</button>
+      </form>
     </div>
 
     <div class="table-wrap" style="margin-top: 1.5rem;">
